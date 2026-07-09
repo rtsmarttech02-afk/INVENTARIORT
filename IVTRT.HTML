@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de datos Ingresos y Salidas</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #2980b9;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --text: #2c3e50;
+            --bg: #f8f9fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { font-size: 24px; margin-bottom: 5px; }
+        header p { font-size: 14px; opacity: 0.8; }
+
+        .config-panel {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--warning);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) auto;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--dark);
+            text-transform: uppercase;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--dark); }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-accent:hover { background: #219150; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: var(--info); color: white; }
+        .btn-info:hover { background: #1f6693; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 950px) {
+            .main-grid {
+                grid-template-columns: 380px 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            height: fit-content;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--light);
+            color: var(--dark);
+        }
+
+        .console-log {
+            background: #1e1e1e;
+            color: #a6e22e;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .console-log .err { color: var(--danger); }
+        .console-log .warn { color: var(--warning); }
+        .console-log .info { color: #66d9ef; }
+
+        .table-container { overflow-x: auto; max-height: 400px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--light); font-size: 14px; }
+        th { background-color: #f1f3f5; font-weight: bold; color: var(--dark); position: sticky; top: 0; }
+        tr:hover { background-color: #fcfcfc; }
+
+        .stock-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .stock-normal { background: #e2fbe8; color: #1e7e34; }
+        .stock-low { background: #fff3cd; color: #856404; animation: pulse 2s infinite; }
+        .stock-empty { background: #f8d7da; color: #721c24; }
+
+        .badge-ingreso { background: #e2fbe8; color: #1e7e34; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        .badge-salida { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .import-box {
+            border: 2px dashed #ccc;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            background: #fafafa;
+            cursor: pointer;
+        }
+        .import-box:hover { border-color: var(--info); background: #f0f7fd; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📦 RT SMART TECH EIRL</h1>
+        <p>Gestión de ingresos y salidas.</p>
+    </header>
+
+    <div class="config-panel">
+        <div class="config-grid">
+            <div class="form-group">
+                <label>URL del Web App de Google Apps Script</label>
+                <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <div class="form-group">
+                <button class="btn-accent" onclick="syncFromCloud()">🔄 Sincronizar con la Nube</button>
+            </div>
+        </div>
+        <div id="consoleLog" class="console-log">Sistemas listos de forma local y nube.</div>
+    </div>
+
+    <div class="main-grid">
+        <div>
+            <div class="card">
+                <h2>🔄 Registrar Movimiento</h2>
+                <form id="transactionForm" onsubmit="handleTransaction(event)">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Tipo de Movimiento</label>
+                        <select id="txType" required>
+                            <option value="ingreso">📥 INGRESO (Suma stock)</option>
+                            <option value="salida">📤 SALIDA (Resta stock)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>SKU (Código)</label>
+                        <input type="text" id="txSku" required placeholder="Ej: SKU-100" oninput="autoFillName()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Nombre del Producto</label>
+                        <input type="text" id="txName" required placeholder="Ej: Caja de pernos">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Cantidad</label>
+                        <input type="number" id="txQty" min="1" value="1" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Alerta Stock Mínimo</label>
+                        <input type="number" id="txMinStock" min="0" value="5">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">💾 Procesar e Informar</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📥 Importación Masiva (.CSV)</h2>
+                <div class="import-box" onclick="document.getElementById('csvFileInput').click()">
+                    <p id="importBoxText">📁 Cargar lista desde Excel (CSV)</p>
+                    <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="handleMassImport(event)">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h2>📊 Stock Actual de Productos</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="searchBox" placeholder="🔍 Buscar..." oninput="renderTable()" style="padding: 6px 10px;">
+                        <button class="btn-info" onclick="exportToCSV()">📥 Descargar CSV</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Nombre</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>🕒 Historial y Auditoría de Movimientos</h2>
+                    <select id="filterHistorySku" onchange="renderHistoryTable()" style="padding: 5px; max-width: 200px;">
+                        <option value="todos">🔍 Filtrar por Producto (Todos)</option>
+                    </select>
+                </div>
+                
+                <div class="table-container" style="max-height: 300px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha y Hora</th>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Tipo</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr><td colspan="5" style="text-align:center; color:#999;">No hay movimientos registrados aún.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let inventario = {};
+    let historial = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if(localStorage.getItem("scriptUrl")) document.getElementById("scriptUrl").value = localStorage.getItem("scriptUrl");
+        if(localStorage.getItem("localInventario")) {
+            inventario = JSON.parse(localStorage.getItem("localInventario"));
+            renderTable();
+            updateHistoryDropdown();
+        }
+        if(localStorage.getItem("localHistorial")) {
+            historial = JSON.parse(localStorage.getItem("localHistorial"));
+            renderHistoryTable();
+        }
+        if(getScriptUrl()) syncFromCloud();
+    });
+
+    // FUNCIÓN MODIFICADA PARA SOLUCIONAR EL ERROR DE COMPATIBILIDAD INTERNACIONAL
+    function getFormattedDate() {
+        // Envía un string estándar universal ISO 8601 legible por Google desde cualquier país
+        return new Date().toISOString();
+    }
+
+    function log(msg, type="") {
+        const consoleLog = document.getElementById("consoleLog");
+        const classType = type ? `class='${type}'` : "";
+        consoleLog.innerHTML += `<div ${classType}>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        consoleLog.scrollTop = consoleLog.scrollHeight;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById("inventoryTableBody");
+        const search = document.getElementById("searchBox").value.toLowerCase();
+        tbody.innerHTML = "";
+        const listado = Object.values(inventario);
+
+        if(!listado.length) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;">Sin productos registrados.</td></tr>`;
+            return;
+        }
+
+        listado.forEach(prod => {
+            if(prod.sku.toLowerCase().includes(search) || prod.nombre.toLowerCase().includes(search)) {
+                let badge = `<span class="stock-badge stock-normal">OK</span>`;
+                if(prod.cantidad === 0) badge = `<span class="stock-badge stock-empty">Agotado</span>`;
+                else if(prod.cantidad <= (prod.minStock || 5)) badge = `<span class="stock-badge stock-low">⚠️ Stock Bajo</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold;">${prod.sku}</td>
+                        <td>${prod.nombre}</td>
+                        <td><strong>${prod.cantidad}</strong></td>
+                        <td>${badge}</td>
+                        <td>
+                           <button class="btn-info" style="padding:3px 6px; font-size:11px;" onclick="viewProductHistory('${prod.sku}')">Ver Historial</button>
+                           <button class="btn-danger" style="padding:3px 6px; font-size:11px;" onclick="deleteProduct('${prod.sku}')">Borrar</button>
+                        </td>
+                    </tr>`;
+            }
+        });
+    }
+
+    function renderHistoryTable() {
+        const tbody = document.getElementById("historyTableBody");
+        const filter = document.getElementById("filterHistorySku").value;
+        tbody.innerHTML = "";
+
+        const historialFiltrado = historial.filter(h => filter === "todos" || h.sku === filter);
+
+        if(!historialFiltrado.length) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">No hay movimientos para mostrar.</td></tr>`;
+            return;
+        }
+
+        for (let i = historialFiltrado.length - 1; i >= 0; i--) {
+            const h = historialFiltrado[i];
+            const typeBadge = h.tipo === "ingreso" ? `<span class="badge-ingreso">📥 INGRESO</span>` : `<span class="badge-salida">📤 SALIDA</span>`;
+            
+            // Si la fecha viene en ISO estándar, la mostramos formateada en el horario del PC local
+            let displayDate = h.timestamp;
+            try {
+                if (h.timestamp && h.timestamp.includes('T')) {
+                    const dateObj = new Date(h.timestamp);
+                    if (!isNaN(dateObj.getTime())) {
+                        displayDate = dateObj.toLocaleString();
+                    }
+                }
+            } catch(e) {}
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="color:#666; font-size:13px;">${displayDate}</td>
+                    <td style="font-weight:bold;">${h.sku}</td>
+                    <td>${h.nombre}</td>
+                    <td>${typeBadge}</td>
+                    <td><strong>${h.cantidad}</strong></td>
+                </tr>`;
+        }
+    }
+
+    function updateHistoryDropdown() {
+        const select = document.getElementById("filterHistorySku");
+        const currentVal = select.value;
+        select.innerHTML = '<option value="todos">🔍 Filtrar por Producto (Todos)</option>';
+        Object.keys(inventario).sort().forEach(sku => {
+            select.innerHTML += `<option value="${sku}">${sku} - ${inventario[sku].nombre.substring(0,20)}</option>`;
+        });
+        select.value = currentVal;
+    }
+
+    function viewProductHistory(sku) {
+        document.getElementById("filterHistorySku").value = sku;
+        renderHistoryTable();
+        document.getElementById("filterHistorySku").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function autoFillName() {
+        const sku = document.getElementById("txSku").value.trim().toUpperCase();
+        if(inventario[sku]) {
+            document.getElementById("txName").value = inventario[sku].nombre;
+            document.getElementById("txMinStock").value = inventario[sku].minStock || 5;
+        }
+    }
+
+    function handleTransaction(e) {
+        e.preventDefault();
+        const type = document.getElementById("txType").value;
+        const sku = document.getElementById("txSku").value.trim().toUpperCase();
+        const nombre = document.getElementById("txName").value.trim();
+        const qty = parseInt(document.getElementById("txQty").value);
+        const minStock = parseInt(document.getElementById("txMinStock").value) || 0;
+
+        if (type === "salida" && inventario[sku] && inventario[sku].cantidad < qty) {
+            alert("⚠️ Alerta: Stock local insuficiente para realizar esta salida. Verifica la sincronización.");
+            return;
+        }
+
+        const ahora = getFormattedDate();
+        const url = getScriptUrl();
+
+        const payload = {
+            action: "add_movement",
+            timestamp: ahora,
+            sku: sku,
+            nombre: nombre,
+            tipo: type,
+            cantidad: qty,
+            minStock: minStock
+        };
+
+        if(!url) {
+            alert("Introduce la URL de Apps Script para registrar en la nube.");
+            return;
+        }
+
+        log(`Registrando ${type.toUpperCase()} para ${sku}...`, "info");
+
+        fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            log(`🚀 Enviado a la nube. Procesando...`, "info");
+            document.getElementById("transactionForm").reset();
+            setTimeout(syncFromCloud, 1200); 
+        })
+        .catch(err => alert("Error al conectar con la nube. Verifica tu red."));
+    }
+
+    function handleMassImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            let contents = evt.target.result;
+            contents = contents.replace(/[^\x20-\x7E\xA0-\xFF\r\n\t]/g, ""); 
+
+            const lines = contents.split(/\r\n|\n|\r/);
+            const ahora = getFormattedDate();
+            const movimientosBulk = [];
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+
+                if (index === 0 && (line.toLowerCase().includes("sku") || line.toLowerCase().includes("producto"))) return;
+
+                const columns = line.includes(";") ? line.split(";") : line.split(",");
+                
+                if (columns.length >= 3) {
+                    const sku = columns[0].replace(/"/g, '').trim().toUpperCase();
+                    const nombre = columns[1].replace(/"/g, '').trim();
+                    const cantRaw = columns[2].replace(/"/g, '').replace(/\s/g, '').trim();
+                    const cantidad = parseInt(cantRaw) || 0;
+                    const minStockRaw = columns[3] ? columns[3].replace(/"/g, '').replace(/\s/g, '').trim() : "5";
+                    const minStock = parseInt(minStockRaw) || 5;
+
+                    if (sku && cantidad > 0) {
+                        movimientosBulk.push({
+                            timestamp: ahora,
+                            sku: sku,
+                            nombre: nombre,
+                            tipo: "ingreso",
+                            cantidad: cantidad,
+                            minStock: minStock
+                        });
+                    }
+                }
+            });
+
+            if (movimientosBulk.length > 0) {
+                const url = getScriptUrl();
+                log(`Subiendo ${movimientosBulk.length} artículos en masa a la nube...`, "info");
+                
+                fetch(url, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "bulk_movement", movimientos: movimientosBulk })
+                }).then(() => {
+                    log(`📥 Datos transmitidos. Esperando confirmación de la nube...`, "info");
+                    document.getElementById("csvFileInput").value = "";
+                    setTimeout(syncFromCloud, 2000); 
+                }).catch(err => {
+                    log(`❌ Error de red: ${err}`, "err");
+                });
+            } else {
+                alert("⚠️ No se encontraron productos válidos. Revisa que el CSV tenga las columnas correspondientes.");
+            }
+        };
+        
+        reader.readAsText(file, "ISO-8859-1"); 
+    }
+
+    function deleteProduct(sku) {
+        if(confirm(`¿Eliminar por completo el producto ${sku} de la nube?`)) { 
+            const url = getScriptUrl();
+            if(!url) return;
+            fetch(url, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "delete_product", sku: sku })
+            }).then(() => {
+                log(`Producto ${sku} eliminado.`, "warn");
+                setTimeout(syncFromCloud, 1200);
+            });
+        }
+    }
+
+    function exportToCSV() {
+        const listado = Object.values(inventario);
+        if(!listado.length) return alert("Sin productos que exportar.");
+
+        let csvContent = "\uFEFFSKU,Nombre del Producto,Cantidad Stock,Alerta Stock Minimo\n";
+        listado.forEach(p => {
+            csvContent += `"${p.sku}","${p.nombre.replace(/"/g, '""')}",${p.cantidad},${p.minStock || 5}\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.setAttribute("href", URL.createObjectURL(blob));
+        link.setAttribute("download", `Inventario_${new Date().toISOString().slice(0,10)}.csv`);
+        link.click();
+    }
+
+    function getScriptUrl() { return document.getElementById("scriptUrl").value.trim() || localStorage.getItem("scriptUrl"); }
+
+    function syncFromCloud() {
+        const url = getScriptUrl();
+        if(!url) return;
+        localStorage.setItem("scriptUrl", url);
+        log("Sincronizando base de datos global de la nube...", "info");
+
+        fetch(`${url}?action=read`, { method: "GET" })
+        .then(res => res.json())
+        .then(resData => {
+            if(resData.success) {
+                const filasInv = resData.inventario || [];
+                inventario = {};
+                for(let i = 1; i < filasInv.length; i++) {
+                    if(!filasInv[i][0]) continue;
+                    const sku = filasInv[i][0].toString().toUpperCase().trim();
+                    inventario[sku] = { 
+                        sku, 
+                        nombre: filasInv[i][1] || "", 
+                        cantidad: parseInt(filasInv[i][2]) || 0, 
+                        minStock: parseInt(filasInv[i][3]) || 5 
+                    };
+                }
+                localStorage.setItem("localInventario", JSON.stringify(inventario));
+
+                const filasHist = resData.historial || [];
+                historial = [];
+                for(let i = 1; i < filasHist.length; i++) {
+                    if(!filasHist[i][0]) continue;
+                    historial.push({
+                        timestamp: filasHist[i][0],
+                        sku: filasHist[i][1],
+                        nombre: filasHist[i][2],
+                        tipo: filasHist[i][3],
+                        cantidad: parseInt(filasHist[i][4]) || 0
+                    });
+                }
+                localStorage.setItem("localHistorial", JSON.stringify(historial));
+
+                renderTable();
+                renderHistoryTable();
+                updateHistoryDropdown();
+                log(`✅ Sincronización perfecta. Base de datos e Historial al día.`, "info");
+            }
+        }).catch((err) => {
+            console.error(err);
+            log("⚠️ Error de conexión temporal. Intenta sincronizar manualmente.", "warn");
+        });
+    }
+</script>
+</body>
+</html>
